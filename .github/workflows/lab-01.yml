@@ -1,0 +1,72 @@
+# Lab 1 — containers and the image.
+#
+# One workflow per lab, scoped to that lab's folder, so finishing lab 3 never re-runs
+# lab 1 and lab 1's checks keep passing once its folder is frozen.
+name: lab-01
+
+on:
+  push:
+    paths: ["lab-01/**", ".github/workflows/lab-01.yml"]
+  pull_request:
+    paths: ["lab-01/**", ".github/workflows/lab-01.yml"]
+  workflow_dispatch:
+
+jobs:
+  # ── required ───────────────────────────────────────────────────────────────
+  section-dockerfile:
+    name: "section · dockerfile"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # the .env history check needs real history
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-01@v1
+        with:
+          section: dockerfile
+          path: lab-01
+
+  section-hardening:
+    name: "section · hardening"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-01@v1
+        with:
+          section: hardening
+          path: lab-01
+
+  section-compose:
+    name: "section · compose"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-01@v1
+        with:
+          section: compose
+          path: lab-01
+
+  # ── bonus · reports, never fails the build ─────────────────────────────────
+  section-wiremock:
+    name: "section · wiremock (bonus)"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-01@v1
+        with:
+          section: wiremock
+          path: lab-01
+
+  section-networks:
+    name: "section · networks (bonus)"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-01@v1
+        with:
+          section: networks
+          path: lab-01

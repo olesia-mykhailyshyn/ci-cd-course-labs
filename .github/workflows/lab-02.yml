@@ -1,0 +1,72 @@
+# Lab 2 — test, build, publish.
+#
+# One workflow per lab, scoped to that lab's folder, so finishing lab 3 never re-runs
+# lab 2 and lab 2's checks keep passing once its folder is frozen.
+#
+# This is the GRADER. Your own pipeline — the one that tests, builds and publishes —
+# is a separate file you write: .github/workflows/publish-lab-02.yml
+name: lab-02
+
+on:
+  push:
+    paths: ["lab-02/**", ".github/workflows/lab-02.yml"]
+  pull_request:
+    paths: ["lab-02/**", ".github/workflows/lab-02.yml"]
+  workflow_dispatch:
+
+# actions: read is what lets the cache bonus ask which caches this repository
+# really holds. Without it that section reports a warning instead of a mark.
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
+jobs:
+  # ── required ───────────────────────────────────────────────────────────────
+  section-tests:
+    name: "section · tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # the .env history check needs real history
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-02@v1
+        with:
+          section: tests
+          path: lab-02
+
+  section-pipeline:
+    name: "section · pipeline"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-02@v1
+        with:
+          section: pipeline
+          path: lab-02
+
+  # Section 3. Announced as opening Thu 5 Nov; the check exists from the start and
+  # is simply red until the work is done, which is how every other section behaves.
+  section-published-image:
+    name: "section · published-image"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-02@v1
+        with:
+          section: published-image
+          path: lab-02
+
+  # ── bonus · reports, never fails the build ─────────────────────────────────
+  section-cache:
+    name: "section · cache (bonus)"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-02@v1
+        with:
+          section: cache
+          path: lab-02
