@@ -1,0 +1,54 @@
+services:
+  app:
+    build: .
+    image: tutoring:final
+    ports:
+      - "8090:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgresql://tutoring:${POSTGRES_PASSWORD}@db:5432/tutoring
+      REDIS_URL: redis://redis:6379/0
+      HOLD_TTL_SECONDS: "300"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: tutoring
+      POSTGRES_DB: tutoring
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-U", "tutoring", "-d", "tutoring"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    networks:
+      - backend
+
+volumes:
+  db-data:
+
+networks:
+  backend:
+    internal: true
+  frontend:
