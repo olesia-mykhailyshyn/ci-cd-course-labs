@@ -1,0 +1,52 @@
+# The stack the QA suite drives.
+#
+# One thing here is different from every compose file you have written so far:
+# the app service has no `build:`. It cannot have one. The image is PULLED, by
+# digest, because the whole point of an AQA run is to test the bytes that were
+# published rather than bytes this machine made a minute ago.
+#
+#   QA_IMAGE=ghcr.io/you/catshop@sha256:... docker compose -f compose.qa.yaml up -d
+#
+# The partner is behind a profile, so by default it is NOT there and /price
+# answers 502. That is deliberate: a dependency that is missing is a case worth
+# having. Add --profile partner to make it answer.
+name: catshop-qa
+
+services:
+  app:
+    image: ${QA_IMAGE:?set QA_IMAGE to the digest your pipeline published}
+    environment:
+      DATABASE_URL: postgresql://catshop:${POSTGRES_PASSWORD:-qa-only}@db:5432/catshop
+      PARTNER_URL: http://partner:8080
+      PARTNER_TIMEOUT: "2"
+    ports:
+      - "${QA_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # no curl in a slim image, so ask python — the app's own interpreter
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: catshop
+      POSTGRES_USER: catshop
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-qa-only}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catshop -d catshop"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    # no ports: the database is reachable from the app and from nothing else
+
+  partner:
+    profiles: ["partner"]
+    image: wiremock/wiremock:3.6.0
+    command: ["--port", "8080", "--verbose"]
+    volumes:
+      - ../partner/mappings:/home/wiremock/mappings:ro

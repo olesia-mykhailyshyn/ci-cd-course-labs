@@ -15,7 +15,7 @@ jobs:
   # ── required ───────────────────────────────────────────────────────────────
   section-dockerfile:
     name: "section · dockerfile"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }   # the .env history check needs real history
@@ -26,7 +26,7 @@ jobs:
 
   section-hardening:
     name: "section · hardening"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -37,7 +37,7 @@ jobs:
 
   section-compose:
     name: "section · compose"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -49,7 +49,7 @@ jobs:
   # ── bonus · reports, never fails the build ─────────────────────────────────
   section-wiremock:
     name: "section · wiremock (bonus)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -58,10 +58,11 @@ jobs:
         with:
           section: wiremock
           path: lab-01
+          bonus: "true"
 
   section-networks:
     name: "section · networks (bonus)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -70,3 +71,4 @@ jobs:
         with:
           section: networks
           path: lab-01
+          bonus: "true"

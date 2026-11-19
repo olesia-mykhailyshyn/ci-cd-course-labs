@@ -25,7 +25,7 @@ jobs:
   # ── required ───────────────────────────────────────────────────────────────
   section-tests:
     name: "section · tests"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }   # the .env history check needs real history
@@ -36,7 +36,7 @@ jobs:
 
   section-pipeline:
     name: "section · pipeline"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -49,7 +49,7 @@ jobs:
   # is simply red until the work is done, which is how every other section behaves.
   section-published-image:
     name: "section · published-image"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -61,7 +61,7 @@ jobs:
   # ── bonus · reports, never fails the build ─────────────────────────────────
   section-cache:
     name: "section · cache (bonus)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -70,3 +70,4 @@ jobs:
         with:
           section: cache
           path: lab-02
+          bonus: "true"

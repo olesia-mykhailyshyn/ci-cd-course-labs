@@ -1,0 +1,89 @@
+# Lab 3 — a pipeline that does not repeat itself.
+#
+# One workflow per lab, scoped to that lab's folder, so finishing lab 4 never
+# re-runs lab 3 and lab 3's checks keep passing once its folder is frozen.
+#
+# This is the GRADER. Your own pipeline — the caller, the two reusable
+# workflows and the composite action — is what this lab asks you to write.
+name: lab-03
+
+on:
+  push:
+    paths: ["lab-03/**", ".github/workflows/lab-03.yml"]
+  pull_request:
+    paths: ["lab-03/**", ".github/workflows/lab-03.yml"]
+  workflow_dispatch:
+
+# Three checks in this lab ask the API what really happened rather than reading
+# your YAML: whether a reusable workflow ran, which caches exist, and whether a
+# run was really cancelled. actions: read is what allows those questions.
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
+jobs:
+  # ── required ───────────────────────────────────────────────────────────────
+  section-reuse:
+    name: "section · reuse"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # the .env history check needs real history
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-03@v1
+        with:
+          section: reuse
+          path: lab-03
+
+  section-cache:
+    name: "section · cache"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-03@v1
+        with:
+          section: cache
+          path: lab-03
+
+  # ── bonus · reports, never fails the build ─────────────────────────────────
+  # The QA stage is a whole stage of a real pipeline and it is optional: pull the
+  # digest, stand the given stack up, drive it with the given suite.
+  section-qa:
+    name: "section · qa (bonus)"
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-03@v1
+        with:
+          section: qa
+          path: lab-03
+          bonus: "true"
+
+  section-aqa:
+    name: "section · aqa (bonus)"
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-03@v1
+        with:
+          section: aqa
+          path: lab-03
+          bonus: "true"
+
+  section-concurrency:
+    name: "section · concurrency (bonus)"
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-03@v1
+        with:
+          section: concurrency
+          path: lab-03
+          bonus: "true"
