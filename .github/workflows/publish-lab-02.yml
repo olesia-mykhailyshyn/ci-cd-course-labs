@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: lab-02/requirements*.txt
       - name: Install dependencies
         working-directory: lab-02
         run: pip install -r requirements.txt -r requirements-dev.txt
