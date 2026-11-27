@@ -1,0 +1,1 @@
+ghcr.io/olesia-mykhailyshyn/catshop@sha256:cf4143b5e276255fb0c4669b9c0abbf4e4e5bb22ec477f3ed732328c3c3bfcf5
