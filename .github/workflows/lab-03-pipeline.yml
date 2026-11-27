@@ -1,0 +1,41 @@
+name: lab-03-pipeline
+
+on:
+  push:
+    paths:
+      - "lab-03/**"
+      - ".github/workflows/lab-03-pipeline.yml"
+      - ".github/workflows/_build-and-test.yml"
+      - ".github/workflows/_qa.yml"
+      - ".github/actions/install-and-test/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-and-test.yml
+    with:
+      python-version: "3.12"
+      image: ghcr.io/${{ github.repository_owner }}/catshop
+      lab-path: lab-03
+
+  qa:
+    needs: build
+    uses: ./.github/workflows/_qa.yml
+    with:
+      image-ref: ${{ needs.build.outputs.image-ref }}
+
+  promote:
+    needs: [build, qa]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Print the reference for published.txt
+        env:
+          IMAGE_REF: ${{ needs.build.outputs.image-ref }}
+        run: echo "$IMAGE_REF" | tee -a "$GITHUB_STEP_SUMMARY"
