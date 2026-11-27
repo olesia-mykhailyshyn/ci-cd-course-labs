@@ -1,0 +1,55 @@
+name: qa
+
+on:
+  workflow_call:
+    inputs:
+      image-ref:
+        type: string
+        required: true
+
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [default, partner]
+    env:
+      QA_IMAGE: ${{ inputs.image-ref }}
+      QA_PROFILE: ${{ matrix.profile }}
+      QA_BASE_URL: http://localhost:8080
+      COMPOSE_PROFILES: ${{ matrix.profile == 'partner' && 'partner' || '' }}
+      STACK: lab-03/qa/compose.qa.yaml
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install the suite's dependencies
+        run: pip install -r lab-03/requirements-dev.txt requests==2.32.3
+
+      - name: Pull the image by digest
+        run: docker pull "$QA_IMAGE"
+
+      - name: Start the QA stack
+        run: docker compose -f "$STACK" up -d --wait
+
+      - name: Run the QA suite
+        run: python -m pytest lab-03/qa -q --junitxml="qa-report-${{ matrix.profile }}.xml"
+
+      - name: Show the app log
+        if: failure()
+        run: docker compose -f "$STACK" logs app
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-report-${{ matrix.profile }}
+          path: qa-report-${{ matrix.profile }}.xml
+
+      - name: Stop the QA stack
+        if: always()
+        run: docker compose -f "$STACK" down -v

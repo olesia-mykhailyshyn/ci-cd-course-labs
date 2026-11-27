@@ -1,0 +1,74 @@
+name: build-and-test
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        type: string
+        required: true
+      image:
+        type: string
+        required: true
+      lab-path:
+        type: string
+        required: true
+    outputs:
+      digest:
+        value: ${{ jobs.build.outputs.digest }}
+      image-ref:
+        value: ${{ jobs.build.outputs.image-ref }}
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles(format('{0}/requirements*.txt', inputs.lab-path)) }}
+          restore-keys: |
+            pip-${{ runner.os }}-py${{ inputs.python-version }}-
+
+      - uses: ./.github/actions/install-and-test
+        with:
+          python-version: ${{ inputs.python-version }}
+          working-directory: ${{ inputs.lab-path }}
+
+  build:
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      image-ref: ${{ inputs.image }}@${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ inputs.lab-path }}
+          push: true
+          tags: ${{ inputs.image }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha,scope=catshop-lab03
+          cache-to: type=gha,mode=max,scope=catshop-lab03
+
+      - name: Show the digest
+        env:
+          IMAGE_REF: ${{ inputs.image }}@${{ steps.push.outputs.digest }}
+        run: echo "$IMAGE_REF" | tee -a "$GITHUB_STEP_SUMMARY"
