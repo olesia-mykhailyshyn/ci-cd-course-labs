@@ -9,15 +9,16 @@ already in it — what is **missing** from a lab folder is the work, and that is
 | Folder | What it is | Due |
 |---|---|---|
 | `lab-01/` | containers and the image | **Thu 12 Nov** |
-| `lab-02/` | test, build, publish | **Thu 19 Nov** |
+| `lab-02/` | test, build, publish | **Wed 25 Nov** |
 | `lab-03/` | a pipeline that does not repeat itself | **Wed 2 Dec** |
-| `lab-04/` | infrastructure as code, and a load balancer | Thu 3 Dec |
+| `lab-04/` | infrastructure as code, on the course server | **Wed 9 Dec** |
 | `lab-05/` | three environments, no secrets in Git | Thu 10 Dec |
 | `lab-06/` | observability | Thu 17 Dec |
 | `lab-07/` | into the cluster | Sun 20 Dec |
 | the final | — announced separately | Sun 20 Dec |
 
-All deadlines 23:59 Kyiv. Later titles may shift as the course goes; the dates will not.
+All deadlines 23:59 Kyiv. Titles and dates can both move while the course is running; this
+table is the one that is right, and each lab's own `ASSIGNMENT.md` repeats it.
 
 **Labs overlap.** An earlier one is still open when the next appears — that is slack for a bad week,
 not extra work. The content is serial, so putting one off blocks the next.

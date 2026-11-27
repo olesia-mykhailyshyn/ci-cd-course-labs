@@ -1,0 +1,72 @@
+# Lab 4 — declare the place, do not click it.
+#
+# One workflow per lab, scoped to that lab's folder, so finishing lab 5 never
+# re-runs lab 4 and lab 4's checks keep passing once its folder is frozen.
+#
+# This is the GRADER. The Terraform — the network, the two replicas, the nginx
+# in front and the database behind — is what this lab asks you to write.
+name: lab-04
+
+on:
+  push:
+    paths: ["lab-04/**", ".github/workflows/lab-04.yml"]
+  pull_request:
+    paths: ["lab-04/**", ".github/workflows/lab-04.yml"]
+  workflow_dispatch:
+
+# The stack section really applies your configuration on this runner: it builds
+# the image, starts four containers and tears them down again. Nothing here
+# needs a cloud account, and nothing here needs a secret.
+permissions:
+  contents: read
+
+jobs:
+  # ── required ───────────────────────────────────────────────────────────────
+  section-stack:
+    name: "section · stack"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # the committed-state check reads real history
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-04@v1
+        with:
+          section: stack
+          path: lab-04
+
+  section-drift:
+    name: "section · drift"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-04@v1
+        with:
+          section: drift
+          path: lab-04
+
+  section-cloud-plan:
+    name: "section · cloud-plan"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-04@v1
+        with:
+          section: cloud-plan
+          path: lab-04
+
+  # ── bonus · reports, never fails the build ─────────────────────────────────
+  # Your own account, your own bill, a real URL. The grader probes it from here,
+  # over the public internet, and checks it is running the commit being graded.
+  section-deployed:
+    name: "section · deployed (bonus)"
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: kse-ci-cd-basics-course/catshop-grader/lab-04@v1
+        with:
+          section: deployed
+          path: lab-04
+          bonus: "true"

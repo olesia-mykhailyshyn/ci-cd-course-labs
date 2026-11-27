@@ -1,0 +1,8 @@
+# Terraform keeps a local state file next to the configuration, and that file
+# holds every attribute of every resource in plaintext — including the database
+# password this lab generates. It is never committed.
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl.bak
+crash.log

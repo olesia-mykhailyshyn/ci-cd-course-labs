@@ -1,6 +1,6 @@
 # Lab 2 — test, build, publish
 
-**Three sections. Due Thursday 19 November, 23:59 Kyiv.** After that, 80% maximum.
+**Three sections. Due Wednesday 25 November, 23:59 Kyiv.** After that, 80% maximum.
 
 Given, inside `lab-02/`: `app.py` and `requirements.txt` (do not change them),
 `partner/mappings/`, `.env.example` — copy it to `.env`, never commit it.

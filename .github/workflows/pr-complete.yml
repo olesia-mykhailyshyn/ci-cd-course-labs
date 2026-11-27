@@ -1,0 +1,76 @@
+# The completeness gate.
+#
+# A pull request with an empty template heading never reaches the marking queue — the
+# README promises this, and this file is the promise. It costs nothing to fix: edit the
+# pull-request description and the check re-runs.
+#
+# It checks that a heading has an answer. It does not judge the answer.
+name: pull request · complete
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  complete:
+    name: "the template is filled in"
+    runs-on: ubuntu-24.04
+    steps:
+      - name: every required heading has an answer
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+
+          REQUIRED = [
+              "What I did",
+              "Alternatives, and the price of what I chose",
+              "The measurements",
+              "Sources",
+              "AI tools",
+          ]
+          body = os.environ.get("BODY") or ""
+
+          # split on '## Heading'
+          sections, key = {}, None
+          for line in body.splitlines():
+              m = re.match(r"^##\s+(.*?)\s*$", line)
+              if m:
+                  key = m.group(1).strip()
+                  sections[key] = []
+              elif key:
+                  sections[key].append(line)
+          sections = {k: "\n".join(v) for k, v in sections.items()}
+
+          def empty(text):
+              # an HTML comment is the template's own prompt, not an answer
+              t = re.sub(r"<!--.*?-->", "", text or "", flags=re.S).strip()
+              t = re.sub(r"^[\s*_\-]+$", "", t)
+              return t.lower() in {"", "-", "n/a", "na", "tbd", "todo", "_no response_", "."}
+
+          missing = [h for h in REQUIRED if h not in sections or empty(sections[h])]
+
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          lines = ["## The pull request template", ""]
+          for h in REQUIRED:
+              ok = h in sections and not empty(sections[h])
+              lines.append(f"- {'✅' if ok else '❌'} **{h}**")
+          if missing:
+              lines += ["", "Edit the pull-request description and this check runs again.",
+                        "One or two lines each is the right length — these are read as evidence,",
+                        "not as an essay."]
+          else:
+              lines += ["", "All five answered. Nothing here judges the answers — that is the read."]
+          if summary:
+              with open(summary, "a") as fh:
+                  fh.write("\n".join(lines) + "\n")
+          print("\n".join(lines))
+
+          if missing:
+              print("\n::error::empty required heading(s): " + "; ".join(missing))
+              sys.exit(1)
+          PY
