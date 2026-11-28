@@ -1,0 +1,76 @@
+name: lab 4 drift
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lab-04/terraform
+    env:
+      TF_CLOUD_ORGANIZATION: ${{ vars.TF_CLOUD_ORGANIZATION }}
+      TF_WORKSPACE: lab-04
+      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+      TF_IN_AUTOMATION: "1"
+      TF_INPUT: "0"
+      TF_CLI_ARGS_plan: "-parallelism=4"
+      TF_CLI_ARGS_apply: "-parallelism=4"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - id: cert
+        uses: kse-ci-cd-basics-course/catshop-grader/catshop-cert@v1
+        with:
+          signer: https://grizik.tech
+
+      - name: terraform init
+        run: terraform init -no-color
+
+      - name: stop one web copy behind terraform's back
+        env:
+          URL: ${{ steps.cert.outputs.url }}
+        run: |
+          victim=$(docker ps --format '{{.Names}}' | grep web | head -1)
+          [ -n "$victim" ] || { echo "no web copy running"; exit 1; }
+          echo "stopping $victim"
+          docker stop "$victim"
+
+      - name: the url keeps answering with one copy down
+        env:
+          URL: ${{ steps.cert.outputs.url }}
+        run: |
+          good=0
+          for _ in $(seq 20); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Connection: close' "$URL/health" || true)
+            [ "$code" = 200 ] && good=$((good+1))
+          done
+          echo "$good/20 answered 200 while one copy was stopped"
+          [ "$good" -ge 18 ] || { echo "the proxy did not fail over"; exit 1; }
+
+      - name: plan notices the drift
+        run: |
+          set +e
+          terraform plan -no-color -detailed-exitcode -out=tfplan
+          rc=$?
+          set -e
+          echo "plan exit code: $rc"
+          [ "$rc" = 2 ] || { echo "plan did not report drift"; exit 1; }
+          terraform show -json tfplan | python3 -c 'import json,sys; d=json.load(sys.stdin); c=[r["address"] for r in d["resource_changes"] if r["change"]["actions"] not in (["no-op"],["read"])]; print("resources to repair:", c); sys.exit(0 if len(c)==1 else 1)'
+
+      - name: apply repairs it
+        env:
+          URL: ${{ steps.cert.outputs.url }}
+        run: |
+          terraform apply -no-color -auto-approve tfplan
+          seen=$(for _ in $(seq 8); do curl -s -H 'Connection: close' "$URL/whoami"; done | sort -u | grep -c . || true)
+          echo "distinct copies answering after repair: $seen"
