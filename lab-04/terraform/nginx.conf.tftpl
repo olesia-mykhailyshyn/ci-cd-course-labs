@@ -1,0 +1,15 @@
+upstream web_copies {
+%{ for host in web_hosts ~}
+    server ${host}:80 max_fails=1 fail_timeout=2s;
+%{ endfor ~}
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://web_copies;
+        proxy_next_upstream error timeout http_502 http_503 http_504;
+        proxy_connect_timeout 1s;
+    }
+}
